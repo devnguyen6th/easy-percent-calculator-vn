@@ -6,6 +6,13 @@ import { CalculatorCard } from '@/components/CalculatorCard';
 import { ResultDisplay } from '@/components/ResultDisplay';
 import { RecentCalculations } from '@/components/RecentCalculations';
 import { AdBanner } from '@/components/AdBanner';
+import { FixedBottomAd } from '@/components/ads/FixedBottomAd';
+import { StickyScrollAd } from '@/components/ads/StickyScrollAd';
+import { DrawerAd } from '@/components/ads/DrawerAd';
+import { PopupAd } from '@/components/ads/PopupAd';
+import { SidebarAds } from '@/components/ads/SidebarAds';
+import { FloatingAd } from '@/components/ads/FloatingAd';
+import { HeaderAd } from '@/components/ads/HeaderAd';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
 
@@ -29,6 +36,13 @@ const CalculatorApp = () => {
   });
   const [isDark, setIsDark] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  
+  // Ad state management
+  const [showHeaderAd, setShowHeaderAd] = useState(true);
+  const [showFixedBottomAd, setShowFixedBottomAd] = useState(true);
+  const [showDrawerAd, setShowDrawerAd] = useState(false);
+  const [showPopupAd, setShowPopupAd] = useState(false);
+  const [calculationCount, setCalculationCount] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem('theme');
@@ -41,6 +55,13 @@ const CalculatorApp = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // Show drawer ad after 10 seconds
+    const drawerTimer = setTimeout(() => {
+      setShowDrawerAd(true);
+    }, 10000);
+
+    return () => clearTimeout(drawerTimer);
   }, []);
 
   const toggleTheme = () => {
@@ -58,6 +79,14 @@ const CalculatorApp = () => {
   const handleCalculate = (type: string, calculationResult: Omit<CalculationResult, 'timestamp'>) => {
     const resultWithTimestamp = { ...calculationResult, timestamp: Date.now() };
     setResults(prev => ({ ...prev, [type]: resultWithTimestamp }));
+    
+    // Increment calculation count and show popup ad every 3 calculations
+    const newCount = calculationCount + 1;
+    setCalculationCount(newCount);
+    
+    if (newCount % 3 === 0) {
+      setShowPopupAd(true);
+    }
   };
 
   const getLatestResult = (): CalculationResult | null => {
@@ -70,6 +99,20 @@ const CalculatorApp = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Header Ad */}
+      {showHeaderAd && (
+        <HeaderAd onClose={() => setShowHeaderAd(false)} />
+      )}
+
+      {/* Sidebar Ads for Desktop */}
+      <SidebarAds />
+
+      {/* Sticky Scroll Ad */}
+      <StickyScrollAd triggerAfterSections={2} />
+
+      {/* Floating Ad */}
+      <FloatingAd />
+
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
@@ -87,6 +130,14 @@ const CalculatorApp = () => {
               </Button>
               <Button variant="ghost" size="sm" onClick={toggleTheme}>
                 {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowDrawerAd(true)}
+                className="text-xs"
+              >
+                📱 Ads
               </Button>
             </div>
           </div>
@@ -108,6 +159,11 @@ const CalculatorApp = () => {
         <div className="space-y-12">
           {/* Section 1: Calculate X% of Y */}
           <section className="space-y-4">
+            {/* Ad above section */}
+            <div className="mb-4">
+              <AdBanner />
+            </div>
+            
             <h2 className="text-2xl font-semibold text-center">{t('percentOf')}</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <CalculatorCard 
@@ -117,11 +173,18 @@ const CalculatorApp = () => {
               />
               <ResultDisplay result={results.percentOf} voiceEnabled={voiceEnabled} />
             </div>
+            
+            {/* Ad below section */}
             <AdBanner />
           </section>
 
           {/* Section 2: Find what percent Y is of X */}
           <section className="space-y-4">
+            {/* Ad above section */}
+            <div className="mb-4">
+              <AdBanner />
+            </div>
+            
             <h2 className="text-2xl font-semibold text-center">{t('whatPercent')}</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <CalculatorCard 
@@ -131,11 +194,18 @@ const CalculatorApp = () => {
               />
               <ResultDisplay result={results.whatPercent} voiceEnabled={voiceEnabled} />
             </div>
+            
+            {/* Ad below section */}
             <AdBanner />
           </section>
 
           {/* Section 3: Increase/Decrease a number by X% */}
           <section className="space-y-4">
+            {/* Ad above section */}
+            <div className="mb-4">
+              <AdBanner />
+            </div>
+            
             <h2 className="text-2xl font-semibold text-center">{t('percentIncrease')}</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <CalculatorCard 
@@ -145,11 +215,18 @@ const CalculatorApp = () => {
               />
               <ResultDisplay result={results.percentIncrease} voiceEnabled={voiceEnabled} />
             </div>
+            
+            {/* Ad below section */}
             <AdBanner />
           </section>
 
           {/* Section 4: Calculate percent change between two numbers */}
           <section className="space-y-4">
+            {/* Ad above section */}
+            <div className="mb-4">
+              <AdBanner />
+            </div>
+            
             <h2 className="text-2xl font-semibold text-center">{t('percentDifference')}</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <CalculatorCard 
@@ -159,11 +236,18 @@ const CalculatorApp = () => {
               />
               <ResultDisplay result={results.percentDifference} voiceEnabled={voiceEnabled} />
             </div>
+            
+            {/* Ad below section */}
             <AdBanner />
           </section>
 
           {/* Section 5: Find original number given X% equals Y */}
           <section className="space-y-4">
+            {/* Ad above section */}
+            <div className="mb-4">
+              <AdBanner />
+            </div>
+            
             <h2 className="text-2xl font-semibold text-center">{t('valueFromPercent')}</h2>
             <div className="grid gap-6 md:grid-cols-2">
               <CalculatorCard 
@@ -173,6 +257,8 @@ const CalculatorApp = () => {
               />
               <ResultDisplay result={results.valueFromPercent} voiceEnabled={voiceEnabled} />
             </div>
+            
+            {/* Ad below section */}
             <AdBanner />
           </section>
 
@@ -194,6 +280,24 @@ const CalculatorApp = () => {
           </div>
         </footer>
       </div>
+
+      {/* Fixed Bottom Ad */}
+      <FixedBottomAd 
+        isVisible={showFixedBottomAd} 
+        onClose={() => setShowFixedBottomAd(false)} 
+      />
+
+      {/* Drawer Ad */}
+      <DrawerAd 
+        isOpen={showDrawerAd} 
+        onClose={() => setShowDrawerAd(false)} 
+      />
+
+      {/* Popup Ad */}
+      <PopupAd 
+        isOpen={showPopupAd} 
+        onClose={() => setShowPopupAd(false)} 
+      />
     </div>
   );
 };
