@@ -1,17 +1,17 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, Volume2 } from 'lucide-react';
+import { Calculator, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from './LanguageProvider';
 import { toast } from '@/hooks/use-toast';
 
 interface CalculatorCardProps {
   type: 'percentOf' | 'whatPercent' | 'percentIncrease' | 'percentDifference' | 'valueFromPercent';
   onCalculate: (result: CalculationResult) => void;
+  voiceEnabled: boolean;
 }
 
 interface CalculationResult {
@@ -22,19 +22,20 @@ interface CalculationResult {
   explanation: string;
 }
 
-export const CalculatorCard: React.FC<CalculatorCardProps> = ({ type, onCalculate }) => {
-  const { t } = useLanguage();
+export const CalculatorCard: React.FC<CalculatorCardProps> = ({ type, onCalculate, voiceEnabled }) => {
+  const { t, language } = useLanguage();
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [isCalculating, setIsCalculating] = useState(false);
+  const [showFormula, setShowFormula] = useState(false);
 
   const handleInputChange = (key: string, value: string) => {
     setInputs(prev => ({ ...prev, [key]: value }));
   };
 
   const speakResult = (text: string) => {
-    if ('speechSynthesis' in window) {
+    if (voiceEnabled && 'speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = t('language') === 'Tiếng Việt' ? 'vi-VN' : 'en-US';
+      utterance.lang = language === 'vi' ? 'vi-VN' : 'en-US';
       speechSynthesis.speak(utterance);
     }
   };
@@ -143,6 +144,11 @@ export const CalculatorCard: React.FC<CalculatorCardProps> = ({ type, onCalculat
       };
 
       onCalculate(calculationResult);
+      
+      // Speak result if voice is enabled
+      if (voiceEnabled) {
+        speakResult(`${t('result')}: ${result.toLocaleString()}. ${explanation}`);
+      }
       
       toast({
         title: t('result'),
@@ -301,16 +307,27 @@ export const CalculatorCard: React.FC<CalculatorCardProps> = ({ type, onCalculat
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />
           {t(type)}
         </CardTitle>
         <CardDescription>
-          <Badge variant="outline" className="text-xs">
-            {t('formula')}: {t(`formula${type.charAt(0).toUpperCase() + type.slice(1)}` as any)}
-          </Badge>
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="text-xs">
+              {t('formula')}: {showFormula ? t(`formula${type.charAt(0).toUpperCase() + type.slice(1)}` as any) : '...'}
+            </Badge>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowFormula(!showFormula)}
+              className="text-xs"
+            >
+              {showFormula ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {showFormula ? 'Hide' : 'Show'} Formula
+            </Button>
+          </div>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

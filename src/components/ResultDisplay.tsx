@@ -1,9 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Volume2 } from 'lucide-react';
 import { useLanguage } from './LanguageProvider';
 
 interface CalculationResult {
@@ -12,27 +10,20 @@ interface CalculationResult {
   result: number;
   formula: string;
   explanation: string;
+  timestamp: number;
 }
 
 interface ResultDisplayProps {
   result: CalculationResult | null;
+  voiceEnabled: boolean;
 }
 
-export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
-  const { t, language } = useLanguage();
-
-  const speakResult = () => {
-    if (result && 'speechSynthesis' in window) {
-      const text = `${t('result')}: ${result.result.toLocaleString()}. ${result.explanation}`;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language === 'vi' ? 'vi-VN' : 'en-US';
-      speechSynthesis.speak(utterance);
-    }
-  };
+export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, voiceEnabled }) => {
+  const { t } = useLanguage();
 
   if (!result) {
     return (
-      <Card className="w-full max-w-md mx-auto opacity-50">
+      <Card className="w-full opacity-50">
         <CardHeader>
           <CardTitle>{t('result')}</CardTitle>
           <CardDescription>{t('noRecentCalculations')}</CardDescription>
@@ -47,13 +38,15 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800">
+    <Card className="w-full border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-green-800 dark:text-green-200">{t('result')}</CardTitle>
-          <Button variant="ghost" size="sm" onClick={speakResult}>
-            <Volume2 className="h-4 w-4" />
-          </Button>
+          {voiceEnabled && (
+            <Badge variant="secondary" className="text-xs">
+              🔊 Voice On
+            </Badge>
+          )}
         </div>
         <CardDescription>
           <Badge variant="secondary">{result.type}</Badge>
